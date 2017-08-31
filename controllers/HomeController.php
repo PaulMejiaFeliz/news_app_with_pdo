@@ -228,7 +228,7 @@ class HomeController extends Controller
     {
         $this->startSession();
         
-        $errorMessage = array();
+        $errorMessage = [];
         $title = "New Post";
         extract($_POST);
         if (isset($_SESSION['logged'])) {
@@ -366,7 +366,7 @@ class HomeController extends Controller
         
         $qBuilder = App::get('qBuilder');
         
-        $errorMessage = array();
+        $errorMessage = [];
         $title = "Edit Post";
         extract($_POST);
         $post = $qBuilder->selectById('news', $id);

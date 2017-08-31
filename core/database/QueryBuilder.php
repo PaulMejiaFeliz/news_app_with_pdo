@@ -2,319 +2,224 @@
 
 class QueryBuilder
 {
-    protected $con;
-    protected $tables = array();
+    private $pdo;
 
-    public function __construct(mysqli $con)
+    public function __construct(PDO $pdo)
     {
-        $this->con = $con;
-        $tables = mysqli_query($con, "SHOW tables");
-
-        while ($table = mysqli_fetch_row($tables)) {
-            $this->tables[] = $table[0];
-        }
+        $this->pdo = $pdo;
     }
 
-    public function selectAll($table, $offset = null, $limit = null)
+    public function select(
+        string $table,
+        array $equalConditions = [],
+        array $likeConditions = [],
+        array $fields = null,
+        string $orderBy = null,
+        int $offset = null,
+        int $limit = null
+    ) : array
     {
-        if (in_array($table, $this->tables)) {
-            
-            $query = "SELECT * FROM {$table}";
-            if (isset($offset) && isset($limit)) {
-                $query .= ' LIMIT ?, ?;';
-            }
+        $query = 'SELECT';
 
-            $statement = mysqli_prepare(
-                $this->con,
-                $query
-            );
-
-            if (isset($offset) && isset($limit)) {
-                $statement->bind_param('ii', $offset, $limit);
-            }
-            $statement->execute();
-
-            $rows = array();
-            $result = $statement->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $statement->close();
-
-            return $rows;
-        }
-    }
-
-    public function selectById($table, $id)
-    {
-        if (in_array($table, $this->tables)) {
-            $statement = mysqli_prepare(
-                $this->con,
-                "SELECT * FROM {$table} WHERE id = ?"
-            );
-            $statement->bind_param("i", $id);
-            $statement->execute();
-            return $statement->get_result()->fetch_assoc();
-        }
-    }
-    public function selectFieldsById($table, $fields, $id)
-    {
-        if (in_array($table, $this->tables)) {
+        if (count($fields)) {
             $fields = implode(', ', $fields);
-            $statement = mysqli_prepare(
-                $this->con,
-                "SELECT {$fields} FROM {$table} WHERE id = ?"
-            );
-            $statement->bind_param("i", $id);
-            $statement->execute();
-            return $statement->get_result()->fetch_assoc();
+            $query .= " {$fields} FROM {$table}";
+        } else {
+            $query .= " * FROM {$table}";            
         }
+        
+        $condition = '';
+
+        if (count($equalConditions)) {
+            foreach (array_keys($equalConditions) as $equalCondition)
+            {
+                $condition .= " {$equalCondition} = :{$equalCondition} AND";
+            }
+        }
+        
+        if (count($likeConditions)) {
+            foreach (array_keys($likeConditions) as $likeCondition)
+            {
+                $condition .= " {$likeCondition} LIKE :{$likeCondition} AND";
+            }
+        }
+
+        if (strlen($condition)) {
+            $query .= " WHERE " . trim($condition, ' AND');
+        }
+        
+        if (!is_null($orderBy)) {
+            $query .= " ORDER BY {$orderBy}";
+        }
+
+        if (!is_null($offset) && !is_null($limit)) {
+            $query .= " LIMIT {$offset}, {$limit}";
+        }
+        
+        $query .= ';';
+
+        $statement = $this->pdo->prepare($query);
+        if (count($equalConditions)) {
+            foreach (array_keys($equalConditions) as $key) {
+                if (gettype($equalConditions[$key]) === 'string') {
+                    $equalConditions[$key] = htmlspecialchars($equalConditions[$key]);
+                    $statement->bindParam(":{$key}", $equalConditions[$key]);
+                } else {
+                    $statement->bindParam(":{$key}", $equalConditions[$key]);
+                }
+                
+            }
+        }
+        
+        if (count($likeConditions)) {
+            foreach (array_keys($likeConditions) as $key) {
+                if (gettype($likeConditions[$key]) === 'string') {
+                    $likeConditions[$key] = '%' . htmlspecialchars($likeConditions[$key]) . '%';
+                    $statement->bindParam(":{$key}", $likeConditions[$key]);
+                } else {
+                    $statement->bindParam(":{$key}", $likeConditions[$key]);
+                }
+            }
+        }
+
+        $statement->execute();
+        
+        return  $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    public function selectById(string $table, int $id, array $fields = null) : array
+    {
+        if (is_null($fields)) {
+            return $this->select($table, [ 'id' => $id ], []);        
+        }
+        return  $this->select($table, [ 'id' => $id ], [], $fields);
     }
 
-    public function selectWhere($table, $types, $content, $offset = null, $limit = null)
+    public function countWhere(
+        string $table,
+        array $equalConditions = [],
+        array $likeConditions = []
+    ) : array
     {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $query = "SELECT * FROM {$table} WHERE";
-            $keys = implode("=? AND ", array_keys($content));
-            $query .= " {$keys}=?";
-            if (isset($offset) && isset($limit)) {
-                $query .= ' LIMIT ?, ?;';
-            }
-            $statement = mysqli_prepare($this->con, $query);
-            if (isset($offset) && isset($limit)) {
-                $content['offset'] = $offset;                
-                $content['limit'] = $limit;
-                $types .= 'ii';
-            }
-            $statement->bind_param($types, ...array_values($content));
-            $statement->execute();
-            $rows = array();
-            $result = $statement->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $statement->close();
+        $query = "SELECT COUNT(*) FROM {$table}";
+        
+        $condition = '';
 
-            return $rows;
+        if (count($equalConditions)) {
+            foreach (array_keys($equalConditions) as $equalCondition)
+            {
+                $condition .= " {$equalCondition} = :{$equalCondition} AND";
+            }
         }
+        
+        if (count($likeConditions)) {
+            foreach (array_keys($likeConditions) as $likeCondition)
+            {
+                $condition .= " {$likeCondition} LIKE :{$likeCondition} AND";
+            }
+        }
+
+        if (strlen($condition)) {
+            $query .= " WHERE " . trim($condition, ' AND');
+        }
+        
+        $query .= ';';
+
+        $statement = $this->pdo->prepare($query);
+        if (count($equalConditions)) {
+            foreach (array_keys($equalConditions) as $key) {
+                if (gettype($equalConditions[$key]) === 'string') {
+                    $equalConditions[$key] = htmlspecialchars($equalConditions[$key]);
+                    $statement->bindParam(":{$key}", $equalConditions[$key]);
+                } else {
+                    $statement->bindParam(":{$key}", $equalConditions[$key]);
+                }
+                
+            }
+        }
+        
+        if (count($likeConditions)) {
+            foreach (array_keys($likeConditions) as $key) {
+                if (gettype($likeConditions[$key]) === 'string') {
+                    $likeConditions[$key] = '%' . htmlspecialchars($likeConditions[$key]) . '%';
+                    $statement->bindParam(":{$key}", $likeConditions[$key]);
+                } else {
+                    $statement->bindParam(":{$key}", $likeConditions[$key]);
+                }
+            }
+        }
+
+        $statement->execute();
+        
+        return  $statement->fetchAll(PDO::FETCH_NUM);
     }
 
-    public function countWhere($table, $types, $content)
+
+    public function insert(string $table, array $content) : int
     {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $query = "SELECT COUNT(*) AS '0' FROM {$table} WHERE";
-            $keys = implode("=? AND ", array_keys($content));
-            $query .= " {$keys}=?";
-            $statement = mysqli_prepare($this->con, $query);
-            $statement->bind_param($types, ...array_values($content));
-            $statement->execute();
-            $result = $statement->get_result();
-            return $result->fetch_assoc()[0];
+        if (!count($content)) {
+            throw new NoContentException();
         }
+
+        $query = "INSERT INTO {$table} (";
+        $params = '';
+
+        foreach (array_keys($content) as $key) {
+            $query .= "{$key}, ";
+            $params .= " :{$key}, ";
+        }
+
+        $query = trim($query, ', ') . ') VALUES (' . trim($params, ', ') . ');';
+
+        $statement = $this->pdo->prepare($query);
+        
+        foreach (array_keys($content) as $key) {
+            if (gettype($content[$key]) === 'string') {
+                $content[$key] = htmlspecialchars($content[$key]);
+                $statement->bindParam(":{$key}", $content[$key]);
+            } else {
+                $statement->bindParam(":{$key}", $content[$key]);
+            }
+        }
+
+        $statement->execute();
+        return $this->pdo->lastInsertId();
     }
 
-    public function countWhereEqualLike($table, $types, $contentEquals, $contentLike)
-    {
-        if (in_array($table, $this->tables)) {
-            $query = "SELECT COUNT(*) AS '0' FROM {$table} WHERE";
-            
-            $keys = implode("=? AND ", array_keys($contentEquals));
-            $query .= " {$keys}=?";
-            if(count($contentLike) > 0) {
-                $keys = implode(" like ? AND ", array_keys($contentLike));
-                $query .= " AND {$keys} like ?";
-            }
-            
-            $statement = mysqli_prepare($this->con, $query);
-            foreach ($contentLike as $key => $value) {
-                $contentLike[$key] = "%{$value}%";
-            }
-            $statement->bind_param($types, ...array_values(array_merge($contentEquals, $contentLike)));
-            $statement->execute();
-            $result = $statement->get_result();
-            return $result->fetch_assoc()[0];
+    public function update(string $table, int $id, array $content) : bool
+    { 
+        if (!count($content)) {
+            throw new NoContentException();
         }
+
+        $query = "UPDATE {$table} SET";
+
+        foreach (array_keys($content) as $key)
+        {
+            $query .= " {$key} = :{$key},";
+        }
+
+        $query = trim($query, ',');
+        $query .= ' WHERE id = :id';
+        $statement = $this->pdo->prepare($query);
+
+        foreach (array_keys($content) as $key) {
+            if (gettype($content[$key]) === 'string') {
+                $content[$key] = htmlspecialchars($content[$key]);
+                $statement->bindParam(":{$key}", $content[$key]);
+            } else {
+                $statement->bindParam(":{$key}", $content[$key]);
+            }
+        }
+
+        $statement->bindParam(':id', $id);
+        return $statement->execute();
     }
 
-    public function selectWhereLike($table, $types, $content, $offset = null, $limit = null, $orderBy = null)
+    public function deleteById(string $table, int $id) : bool 
     {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $query = "SELECT * FROM {$table} WHERE";
-            $keys = implode(" like ? AND ", array_keys($content));
-            $query .= " {$keys} like ?";
-            if (isset($orderBy)) {
-                $query .= " ORDER BY {$orderBy}";
-            }
-            if (isset($offset) && isset($limit)) {
-                $query .= ' LIMIT ?, ?;';
-            }
-            
-            $statement = mysqli_prepare($this->con, $query);
-            foreach ($content as $key => $value) {
-                $content[$key] = "%{$value}%";
-            }
-            if (isset($offset) && isset($limit)) {
-                $content['offset'] = $offset;                
-                $content['limit'] = $limit;
-                $types .= 'ii';
-            }
-            $statement->bind_param($types, ...array_values($content));
-            $statement->execute();
-            
-            $rows = [];
-            $result = $statement->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $statement->close();
-            
-            return $rows;
-        }
-    }
-
-    public function selectWhereEqualLike($table, $types,$contentEquals, $contentLike, $offset = null, $limit = null, $orderBy = null)
-    {
-        if (in_array($table, $this->tables)) {
-            $query = "SELECT * FROM {$table} WHERE";
-
-            $keys = implode("=? AND ", array_keys($contentEquals));
-            $query .= " {$keys}=?";
-            if(count($contentLike) > 0) {
-                $keys = implode(" like ? AND ", array_keys($contentLike));
-                $query .= " AND {$keys} like ?";
-            }
-            
-            if (isset($orderBy)) {
-                $query .= " ORDER BY {$orderBy}";
-            }
-            if (isset($offset) && isset($limit)) {
-                $query .= ' LIMIT ?, ?;';
-            }
-            
-            $statement = mysqli_prepare($this->con, $query);
-            foreach ($contentLike as $key => $value) {
-                $contentLike[$key] = "%{$value}%";
-            }
-            if (isset($offset) && isset($limit)) {
-                $contentLike['offset'] = $offset;                
-                $contentLike['limit'] = $limit;
-                $types .= 'ii';
-            }
-            $statement->bind_param($types, ...array_values(array_merge($contentEquals, $contentLike)));
-            $statement->execute();
-            $rows = [];
-            $result = $statement->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $statement->close();
-            
-            return $rows;
-        }
-    }
-
-    public function countWhereLike($table, $types, $content)
-    {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $query = "SELECT COUNT(*) AS '0' FROM {$table} WHERE";
-            $keys = implode(" like ? AND ", array_keys($content));
-            $query .= " {$keys} like ?";
-            $statement = mysqli_prepare($this->con, $query);
-            foreach ($content as $key => $value) {
-                $content[$key] = "%{$value}%";
-            }
-            $statement->bind_param($types, ...array_values($content));
-            $statement->execute();
-            $result = $statement->get_result();
-            return $result->fetch_assoc()[0];            
-        }
-    }
-
-    public function selectFieldsWhere($table, $fields, $types, $content, $offset = null, $limit = null)
-    {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $fields = implode(', ', $fields);
-            $query = "SELECT {$fields} FROM {$table} WHERE";
-            $keys = implode("=? AND ", array_keys($content));
-            $query .= " {$keys}=?";
-            if (isset($offset) && isset($limit)) {
-                $query .= ' LIMIT ?, ?;';
-            }
-            $statement = mysqli_prepare($this->con, $query);
-
-            if (isset($offset) && isset($limit)) {
-                $content['offset'] = $offset;                
-                $content['limit'] = $limit;
-                $types .= 'ii';
-            }
-            $statement->bind_param($types, ...array_values($content));
-               
-            $statement->execute();
-            $rows = [];
-            $result = $statement->get_result();
-            while ($row = $result->fetch_assoc()) {
-                $rows[] = $row;
-            }
-            $statement->close();
-            
-            return $rows;
-        }
-    }
-
-    public function insert($table, $types, $content)
-    {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $query = "INSERT INTO {$table}";
-            $keys = implode(", ", array_keys($content));
-            $query .= " ({$keys}) VALUES (?";
-            for ($i = 0; $i < count($content) - 1; $i++) {
-                $query .= ", ?";
-            }
-            $query .= ");";
-
-            foreach ($content as $key => $value) {
-                $content[$key] = htmlspecialchars($value);
-            }
-
-            $statement = mysqli_prepare($this->con, $query);
-            $statement->bind_param($types, ...array_values($content));
-            $statement->execute();
-
-            return $statement->insert_id;
-        }
-    }
-
-    public function update($table, $id, $types, $content)
-    {
-        if (in_array($table, $this->tables) && count($content) > 0) {
-            $query = "UPDATE {$table} SET ";
-            $keys = implode("=? , ", array_keys($content));
-            $query .= " {$keys}=? WHERE id = ?";
-            $statement = mysqli_prepare($this->con, $query);
-
-            $content['id'] = & $id;
-            $types .= 'i';
-
-            foreach ($content as $key => $value) {
-                $content[$key] = htmlspecialchars($value);
-            }
-
-            $statement->bind_param($types, ...array_values($content));
-            $statement->execute();
-
-            return $statement->insert_id;
-        }
-    }
-
-    public function deleteById($table, $id)
-    {
-        if (in_array($table, $this->tables)) {
-            $statement = mysqli_prepare(
-                $this->con,
-                "DELETE FROM {$table} WHERE id = ?"
-            );
-            $statement->bind_param("i", $id);
-            $statement->execute();
-        }
+        $statement =$this->pdo->prepare("DELETE FROM {$table} WHERE id = :id;");
+        $statement->bindParam(':id', $id);
+        return $statement->execute();
     }
 }

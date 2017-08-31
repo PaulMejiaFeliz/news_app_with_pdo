@@ -11,6 +11,33 @@ App::bind('router', new Router("Home@notFound"));
 
 require "routes.php";
 
-App::get('router')->direct(Request::uri(), Request::method());
+$id = App::get('qBuilder')->insert(
+    'news',
+    [
+        'title' => 'Saludo',
+        'content' => 'Hola, ¿Qué tal??',
+        'user' => 1,
+        'created_at' => date('Y-m-d H:i:s')
+    ]
+);
 
-App::get('connection')->close();
+App::get('qBuilder')->selectWhere(
+    "news"
+);
+
+var_dump($id);
+
+// var_dump(App::get('qBuilder')->update(
+//     'news',
+//     3,
+//     [
+//         'title' => 'Saludo',
+//         'content' => 'Hola, ¿Qué tal??',
+//         'user' => 1,
+//         'updated_at' => date('Y-m-d H:i:s')
+//     ]
+// ));
+
+// App::get('router')->direct(Request::uri(), Request::method());
+
+// App::get('connection')->close();

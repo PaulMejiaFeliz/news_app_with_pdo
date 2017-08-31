@@ -21,7 +21,7 @@ class AcountController extends Controller
     {
         $this->startSession();
         $title = "Login";      
-        $errorMessage = array();
+        $errorMessage = [];
         extract($_POST);
         
         if (strlen(trim($email)) == 0) {
@@ -95,7 +95,7 @@ class AcountController extends Controller
     {
         $this->startSession();
 
-        $errorMessage = array();
+        $errorMessage = [];
         $title = "Register";
         extract($_POST);
 

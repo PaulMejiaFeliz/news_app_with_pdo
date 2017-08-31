@@ -2,20 +2,26 @@
 
 class Connection
 {
-    private static $con;
+    private static $_pdo;
     
-    final private function __construct () {}
+    final private function __construct() {}
     final private function __clone() {}
     final private function __wakeup() {}
     
     final public static function getConnection($config)
     {
-        self::$con = self::$con ?? mysqli_connect(
-            $config["host"],
-            $config["user"],
-            $config["password"],
-            $config["dbName"]
-        );
-        return self::$con;
+        try
+        {
+            self::$_pdo = self::$_pdo ?? new PDO(
+                "mysql:host={$config['host']};dbname={$config['dbName']};",
+                $config['user'],
+                $config['password']
+            );
+            return self::$_pdo;
+        }
+        catch(PDOException $e)
+        {
+            throw $e;
+        }
     }
 }
