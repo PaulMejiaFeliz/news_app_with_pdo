@@ -17,15 +17,13 @@ class HomeController extends Controller
         $title = 'Home';
         $searchFields = array_values($this->filterFields);
         $filter = [ 'is_deleted' => 0 ];
-        $types = 'i';
-        if (isset($_GET["searchBy"])) {
-            $filter[array_keys($this->filterFields)[$_GET["searchBy"]]]= $_GET['value'];
-            $types .= 's';
+        if (isset($_GET['searchBy'])) {
+            $filter[array_keys($this->filterFields)[$_GET['searchBy']]]= $_GET['value'];
         }
 
-        $pagination['count'] = App::get('qBuilder')->countWhereLike(
+        $pagination['count'] = App::get('qBuilder')->count(
             'news',
-            $types,
+            [],
             $filter
         );
 
@@ -33,25 +31,26 @@ class HomeController extends Controller
         $pagination['linksCount'] = 5;
         $pagination['current'] = abs($_GET['page'] ?? 1);
         
-        $news = App::get('qBuilder')->selectWhereLike(
+        $news = App::get('qBuilder')->select(
             'news',
-            $types,
+            [],
             $filter,
+            [],
+            'created_at DESC',
             ($pagination['current'] - 1) * $pagination['itemsPerPage'],
-            $pagination['itemsPerPage'],
-            'created_at DESC'
+            $pagination['itemsPerPage']
         );
         $news = array_map(
             function($new) {
                 if (isset($new['user'])) {
-                    $new['user'] = App::get('qBuilder')->selectFieldsById(
+                    $new['user'] = App::get('qBuilder')->selectById(
                         'user',
+                        $new['user'],
                         [
-                            "name",
-                            "lastName",
-                            "email"
-                        ],
-                        $new['user']
+                            'name',
+                            'lastName',
+                            'email'
+                        ]
                     );
                 }
                 return $new;
@@ -79,15 +78,12 @@ class HomeController extends Controller
         $title = 'My Posts';
         $searchFields = array_values($this->filterFields);
         $filter = [];
-        $types = 'ii';
-        if (isset($_GET["searchBy"])) {
-            $filter[array_keys($this->filterFields)[$_GET["searchBy"]]]= $_GET['value'];
-            $types .= 's';
+        if (isset($_GET['searchBy'])) {
+            $filter[array_keys($this->filterFields)[$_GET['searchBy']]]= $_GET['value'];
         }
 
-        $pagination['count'] = App::get('qBuilder')->countWhereEqualLike(
+        $pagination['count'] = App::get('qBuilder')->count(
             'news',
-            $types,
             [
                 'is_deleted' => 0, 'user' => $_SESSION['user']['id']
             ],
@@ -98,13 +94,14 @@ class HomeController extends Controller
         $pagination['linksCount'] = 5;
         $pagination['current'] = abs($_GET['page'] ?? 1);
 
-        $news = App::get('qBuilder')->selectWhereEqualLike(
+        $news = App::get('qBuilder')->select(
             'news',
-            $types,
             [
                 'is_deleted' => 0, 'user' => $_SESSION['user']['id']
             ],
             $filter,
+            [],
+            'created_at DESC',
             ($pagination['current'] - 1) * $pagination['itemsPerPage'],
             $pagination['itemsPerPage']
         );
@@ -112,14 +109,14 @@ class HomeController extends Controller
         $news = array_map(
             function($new) {
                 if (isset($new['user'])) {
-                    $new['user'] = App::get('qBuilder')->selectFieldsById(
+                    $new['user'] = App::get('qBuilder')->selectById(
                         'user',
+                        $new['user'],
                         [
-                            "name",
-                            "lastName",
-                            "email"
-                        ],
-                        $new['user']
+                            'name',
+                            'lastName',
+                            'email'
+                        ]
                     );
                 }
                 return $new;
@@ -146,7 +143,7 @@ class HomeController extends Controller
             $qBuilder = App::get('qBuilder');
 
             $post = $qBuilder->selectById('news', $_GET['id']);
-            if ($post['is_deleted'] || !isset($post)) {
+            if ($post['is_deleted'] || !count($post)) {
                 header('Location: /notFound');                
             }
 
@@ -156,30 +153,29 @@ class HomeController extends Controller
                         $owner = true;
                     }
                 }
-                $post['user'] = $qBuilder->selectFieldsById(
+                $post['user'] = $qBuilder->selectById(
                     'user',
+                    $post['user'],
                     [
-                        "name",
-                        "lastName",
-                        "email"
-                    ],
-                    $post['user']
+                        'name',
+                        'lastName',
+                        'email'
+                    ]
                 );
             }
             
             if (isset($post['content'])) {
-                $post['content'] = explode("\n",$post['content']);
+                $post['content'] = explode('\n',$post['content']);
             }
 
-            $pagination['count'] = App::get('qBuilder')->countWhere(
+            $pagination['count'] = App::get('qBuilder')->count(
                 'news_comments',
-                'ii',
                 [
                     'new' => $post['id'],
                     'is_deleted' => 0
                 ]
             );
-    
+
             $pagination['itemsPerPage'] = 3;
             $pagination['linksCount'] = 5;
             $pagination['current'] = abs($_GET['page'] ?? 1);
@@ -189,12 +185,11 @@ class HomeController extends Controller
             $qBuilder->update(
                 'news',
                 $post['id'],
-                'i',
                 [
                     'views' => isset($post['views']) ? ++$post['views'] : 0
                 ]
             );
-            $title = $post['title'] ?? "";
+            $title = $post['title'] ?? '';
             
             return $this->view(
                 'postDetails',
@@ -224,33 +219,31 @@ class HomeController extends Controller
         }
     }
 
-    public function postNewPost()
+    public function addPost()
     {
         $this->startSession();
         
-        $errorMessage = array();
-        $title = "New Post";
+        $errorMessage = [];
+        $title = 'New Post';
         extract($_POST);
         if (isset($_SESSION['logged'])) {
             $user = $_SESSION['user'];
         
             if (strlen(trim($postTitle)) < 5) {
-                $errorMessage[] = "The title must have at least 5 charcters.";
+                $errorMessage[] = 'The title must have at least 5 charcters.';
             }
             if (strlen(trim($content)) == 0) {
-                $errorMessage[] = "The content is required.";
+                $errorMessage[] = 'The content is required.';
             }
             if (count($errorMessage) == 0) {
 
                 $postId = App::get('qBuilder')->insert(
                     'news',
-                    'ssiss',
                     [
                         'title' => $postTitle,
                         'content' => $content,
                         'user' => $user['id'],
-                        'created_at' => (new DateTime())->format('Y-m-d H:i:s'),
-                        'updated_at' => (new DateTime())->format('Y-m-d H:i:s')
+                        'created_at' => date('Y-m-d H:i:s')
                     ]
                 );
 
@@ -281,7 +274,7 @@ class HomeController extends Controller
             $qBuilder = App::get('qBuilder');
 
             $post = $qBuilder->selectById('news', $id);
-            $title = $post['title'] ?? "";
+            $title = $post['title'] ?? '';
             $owner = true;
             $exist = true;
             
@@ -290,16 +283,16 @@ class HomeController extends Controller
                     $qBuilder->update(
                         'news',
                         $post['id'],
-                        'i',
                         [
-                            'is_deleted' => 1
+                            'is_deleted' => 1,
+                            'updated_at' => date('Y-m-d H:i:s')                            
                         ]
                     );
                 } else {
                     $owner = false;
                 }
             } else {
-                $title = "Deleted Post";                
+                $title = 'Deleted Post';                
                 $exist = false;
             }
 
@@ -329,8 +322,8 @@ class HomeController extends Controller
             $post = $qBuilder->selectById('news', $_GET['id']);
             $id = $post['id'];
             $title = 'Edit Post';
-            $postTitle = $post['title'] ?? "";
-            $content = $post['content'] ?? "";
+            $postTitle = $post['title'] ?? '';
+            $content = $post['content'] ?? '';
             $owner = true;
             $exist = true;
             if (! $post['is_deleted']) {
@@ -338,7 +331,7 @@ class HomeController extends Controller
                     $owner = false;
                 }
             } else {
-                $title = "Post not found";
+                $title = 'Post not found';
                 $exist = false;
             }
 
@@ -356,7 +349,7 @@ class HomeController extends Controller
         }
     }
 
-    public function postEditPost()
+    public function modifyPost()
     {
         $this->startSession();
         
@@ -366,8 +359,8 @@ class HomeController extends Controller
         
         $qBuilder = App::get('qBuilder');
         
-        $errorMessage = array();
-        $title = "Edit Post";
+        $errorMessage = [];
+        $title = 'Edit Post';
         extract($_POST);
         $post = $qBuilder->selectById('news', $id);
         $owner = true;
@@ -377,21 +370,20 @@ class HomeController extends Controller
                 $owner = false;
             } else {
                 if (strlen(trim($postTitle)) < 5) {
-                    $errorMessage[] = "The title must have at least 5 charcters.";
+                    $errorMessage[] = 'The title must have at least 5 charcters.';
                 }
                 if (strlen(trim($content)) == 0) {
-                    $errorMessage[] = "The content is required.";
+                    $errorMessage[] = 'The content is required.';
                 }
                 if (count($errorMessage) == 0) {
     
                     $qBuilder->update(
                         'news',
                         $post['id'],
-                        'sss',
                         [
                             'title' => $postTitle,
                             'content' => $content,
-                            'updated_at' => (new DateTime())->format('Y-m-d H:i:s')
+                            'updated_at' => date('Y-m-d H:i:s')
                         ]
                     );
     
@@ -399,7 +391,7 @@ class HomeController extends Controller
                 }
             }
         } else {
-            $title = "Post not found";
+            $title = 'Post not found';
             $exist = false;
         }
 

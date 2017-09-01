@@ -6,7 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'AcountController' => $baseDir . '/controllers/AcountController.php',
+    'AccountController' => $baseDir . '/controllers/AccountController.php',
     'App' => $baseDir . '/core/App.php',
     'CommentsController' => $baseDir . '/controllers/CommentsController.php',
     'ComposerAutoloaderInit55640fa0912c24d2ca988a031747af8c' => $vendorDir . '/composer/autoload_real.php',
