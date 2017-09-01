@@ -113,7 +113,11 @@ class QueryBuilder
         }
     }
 
-    public function countWhereEqualLike($table, $types, $contentEquals, $contentLike)
+    public function count(
+        string $table,
+        array $equalConditions = [],
+        array $likeConditions = []
+    ) : array
     {
         if (in_array($table, $this->tables)) {
             $query = "SELECT COUNT(*) AS '0' FROM {$table} WHERE";
