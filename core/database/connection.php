@@ -8,7 +8,7 @@ class Connection
     final private function __clone() {}
     final private function __wakeup() {}
     
-    final public static function getConnection($config)
+    final public static function getConnection(array $config) : PDO
     {
         try
         {
@@ -18,6 +18,20 @@ class Connection
                 $config['password']
             );
             return self::$_pdo;
+        }
+        catch(PDOException $e)
+        {
+            throw $e;
+        }
+    }
+
+    final public static function closeConnection() : void
+    {
+        try
+        {
+            if (!is_null(self::$_pdo)) {
+                self::$_pdo = null;
+            }    
         }
         catch(PDOException $e)
         {

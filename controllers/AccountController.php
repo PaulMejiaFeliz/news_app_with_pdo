@@ -1,6 +1,6 @@
 <?php
 
-class AcountController extends Controller
+class AccountController extends Controller
 {
     public function login()
     {
@@ -11,7 +11,7 @@ class AcountController extends Controller
             return $this->view(
                 'login',
                 [
-                    'title' => "Login"
+                    'title' => 'Login'
                 ]
             );
         }
@@ -20,16 +20,15 @@ class AcountController extends Controller
     public function loginPost()
     {
         $this->startSession();
-        $title = "Login";      
+        $title = 'Login';      
         $errorMessage = [];
         extract($_POST);
         
         if (strlen(trim($email)) == 0) {
             $errorMessage[]= 'The email is required.';
         } else {
-            $user = App::get('qBuilder')->selectWhere(
+            $user = App::get('qBuilder')->select(
                 'user',
-                's',
                 [
                     'email' => $email
                 ]
@@ -73,7 +72,7 @@ class AcountController extends Controller
             session_destroy();
         }
         
-        header('Location: /login');
+        header('Location: /');
     }
 
     public function register()
@@ -96,51 +95,49 @@ class AcountController extends Controller
         $this->startSession();
 
         $errorMessage = [];
-        $title = "Register";
+        $title = 'Register';
         extract($_POST);
 
         if (strlen(trim($password)) >= 5) {
             if ($password == $confirmPassword) {
                 $password = password_hash($password, PASSWORD_DEFAULT);
             } else {
-                $errorMessage[] = "The passwords do not match.";
+                $errorMessage[] = 'The passwords do not match.';
             }
         } else {
-            $errorMessage[] = "The password must have at least 5 charcters.";
+            $errorMessage[] = 'The password must have at least 5 charcters.';
         }
         if (strlen(trim($name)) == 0) {
-            $errorMessage[] = "The name is required.";
+            $errorMessage[] = 'The name is required.';
         }
         if (strlen(trim($lastName)) == 0) {
-            $errorMessage[] = "The lastname is required.";
+            $errorMessage[] = 'The lastname is required.';
         }
         if (strlen(trim($email)) == 0) {
-            $errorMessage[] = "The email is required.";
+            $errorMessage[] = 'The email is required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errorMessage[] = "This email address is not valide.";            
+            $errorMessage[] = 'This email address is not valide.';            
         } else {
             $user = count(
-                App::get('qBuilder')->selectWhere(
+                App::get('qBuilder')->select(
                     'user',
-                    's',
                     [
                         'email' => $email
                     ]
                 )
             );
             if ($user != 0) {
-                $errorMessage[] = "This email address is not available.";
+                $errorMessage[] = 'This email address is not available.';
             }
         }
         if (count($errorMessage) == 0) {
             $userId = App::get('qBuilder')->insert(
-                "user",
-                "ssss",
+                'user',
                 [
-                    "name" => $name,
-                    "lastName" => $lastName,
-                    "email" => $email,
-                    "password" => $password
+                    'name' => $name,
+                    'lastName' => $lastName,
+                    'email' => $email,
+                    'password' => $password
                 ]
             );
 
@@ -149,10 +146,10 @@ class AcountController extends Controller
             $_SESSION['user'] = $user;
             $_SESSION['logged'] = true;
     
-            $name = "";
-            $lastName = "";
-            $email = "";
-            $password = "";
+            $name = ';
+            $lastName = ';
+            $email = ';
+            $password = ';
         }
         if (isset($_SESSION['logged'])) {
             header('Location: /');

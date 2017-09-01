@@ -11,24 +11,22 @@ class CommentsController extends Controller
             $user = $_SESSION['user'];
 
             if (strlen(trim($newId)) == 0) {
-                return $this->view('notFound', [ "message" => "Post not found" ]);
+                return $this->view('notFound', [ 'message' => 'Post not found' ]);
             } else {
                 $post = App::get('qBuilder')->selectById('news', $newId);
                 if ($post['is_deleted']) {
-                    return $this->view('notFound', [ "message" => "Post not found" ]);
+                    return $this->view('notFound', [ 'message' => 'Post not found' ]);
                 }
             }
             if (strlen(trim($content)) > 0) {
 
                 App::get('qBuilder')->insert(
                     'news_comments',
-                    'iisss',
                     [
                         'user' => $user['id'],
                         'new' => $newId,
                         'content' => trim($content),
-                        'created_at' => (new DateTime())->format('Y-m-d H:i:s'),
-                        'updated_at' => (new DateTime())->format('Y-m-d H:i:s')
+                        'created_at' => (new DateTime())->format('Y-m-d H:i:s')
                     ]
                 );
             }
@@ -41,13 +39,15 @@ class CommentsController extends Controller
     {
         $this->startSession();
 
-        $comments = App::get('qBuilder')->selectWhere(
+        $comments = App::get('qBuilder')->select(
             'news_comments',
-            'ii',
             [
                 'new' => $newId,
                 'is_deleted' => 0
             ],
+            [],
+            [],
+            'created_at DESC',
             ($page - 1) * $itemsPerPage,
             $itemsPerPage
         );
@@ -64,14 +64,14 @@ class CommentsController extends Controller
                     } else {
                         $comment['owner'] = false;                        
                     }
-                    $comment['user'] = App::get('qBuilder')->selectFieldsById(
+                    $comment['user'] = App::get('qBuilder')->selectById(
                         'user',
+                        $comment['user'],
                         [
-                            "name",
-                            "lastName",
-                            "email"
-                        ],
-                        $comment['user']
+                            'name',
+                            'lastName',
+                            'email'
+                        ]
                     );
                 }
                 return $comment;
@@ -102,7 +102,6 @@ class CommentsController extends Controller
                 $qBuilder->update(
                     'news_comments',
                     $comment['id'],
-                    'ss',
                     [
                         'content' => $content,
                         'updated_at' => (new DateTime())->format('Y-m-d H:i:s')
@@ -111,7 +110,7 @@ class CommentsController extends Controller
             }
             return header("Location: /postDetails?id={$comment['new']}");
         }
-        return header("Location: /");        
+        return header('Location: /');        
     }
 
     public function deleteComment()
@@ -131,14 +130,14 @@ class CommentsController extends Controller
                 $qBuilder->update(
                     'news_comments',
                     $comment['id'],
-                    'i',
                     [
-                        'is_deleted' => 1
+                        'is_deleted' => 1,
+                        'updated_at' => (new DateTime())->format('Y-m-d H:i:s')                        
                     ]
                 );
             }
             return header("Location: /postDetails?id={$comment['new']}");
         }
-        return header("Location: /");
+        return header('Location: /');
     }
 }

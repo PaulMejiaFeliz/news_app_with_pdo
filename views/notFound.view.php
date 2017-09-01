@@ -1,2 +1,2 @@
 
-<h1><?= $message ?? "Page not found" ?></h1>
+<h1><?= $message ?? 'Page not found' ?></h1>

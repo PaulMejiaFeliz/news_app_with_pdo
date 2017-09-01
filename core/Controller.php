@@ -6,9 +6,9 @@ abstract class Controller
     {
         $this->startSession();
         extract($data);
-        require "views/partials/head.php";
+        require 'views/partials/head.view.php';
         require "views/{$view}.view.php";
-        require "views/partials/foot.php";
+        require 'views/partials/foot.view.php';
     }
 
     protected function startSession()

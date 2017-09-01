@@ -14,7 +14,7 @@ class QueryBuilder
         array $equalConditions = [],
         array $likeConditions = [],
         array $fields = null,
-        string $orderBy = null,
+        ?string $orderBy = null,
         int $offset = null,
         int $limit = null
     ) : array
@@ -45,7 +45,7 @@ class QueryBuilder
         }
 
         if (strlen($condition)) {
-            $query .= " WHERE " . trim($condition, ' AND');
+            $query .= ' WHERE ' . trim($condition, ' AND');
         }
         
         if (!is_null($orderBy)) {
@@ -84,22 +84,33 @@ class QueryBuilder
 
         $statement->execute();
         
-        return  $statement->fetchAll(PDO::FETCH_ASSOC);
+        return  $statement->rowCount() ? $statement->fetchAll(PDO::FETCH_ASSOC) : [];
     }
     
     public function selectById(string $table, int $id, array $fields = null) : array
     {
-        if (is_null($fields)) {
-            return $this->select($table, [ 'id' => $id ], []);        
+        $query = 'SELECT';
+        
+        if (count($fields)) {
+            $fields = implode(', ', $fields);
+            $query .= " {$fields}";
+        } else {
+            $query .= ' *';
         }
-        return  $this->select($table, [ 'id' => $id ], [], $fields);
+
+        $query .= " FROM {$table} WHERE id = :id;";
+
+        $statement = $this->pdo->prepare($query);
+        $statement->bindParam(':id', $id);
+        $statement->execute();
+        return  $statement->rowCount() ? $statement->fetch(PDO::FETCH_ASSOC) : [];
     }
 
     public function count(
         string $table,
         array $equalConditions = [],
         array $likeConditions = []
-    ) : array
+    ) : int
     {
         $query = "SELECT COUNT(*) FROM {$table}";
         
@@ -120,7 +131,7 @@ class QueryBuilder
         }
 
         if (strlen($condition)) {
-            $query .= " WHERE " . trim($condition, ' AND');
+            $query .= ' WHERE ' . trim($condition, ' AND');
         }
         
         $query .= ';';
@@ -150,8 +161,7 @@ class QueryBuilder
         }
 
         $statement->execute();
-        
-        return  $statement->fetchAll(PDO::FETCH_NUM);
+        return current($statement->fetch());
     }
 
 
