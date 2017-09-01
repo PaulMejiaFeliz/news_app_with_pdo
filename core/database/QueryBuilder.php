@@ -95,7 +95,7 @@ class QueryBuilder
         return  $this->select($table, [ 'id' => $id ], [], $fields);
     }
 
-    public function countWhere(
+    public function count(
         string $table,
         array $equalConditions = [],
         array $likeConditions = []
