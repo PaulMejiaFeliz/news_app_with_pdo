@@ -316,7 +316,7 @@ class HomeController extends Controller
      *
      * @return void
      */
-    public function newPost() : void
+    public function addPostView() : void
     {
         $this->startSession();
         if (!isset($_SESSION['logged'])) {
@@ -447,7 +447,7 @@ class HomeController extends Controller
      *
      * @return void
      */
-    public function editPost() : void
+    public function editPostView() : void
     {
         $this->startSession();
         if (!isset($_SESSION['logged'])) {
@@ -496,7 +496,7 @@ class HomeController extends Controller
      *
      * @return void
      */
-    public function modifyPost() : void
+    public function editPost() : void
     {
         $this->startSession();
         

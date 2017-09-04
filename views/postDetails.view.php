@@ -93,7 +93,7 @@
                             <?php
                             if (isset($pagination)) {
                                 if ($pagination['count'] > 0) {
-                                    newsapp\core\Pagination::load(
+                                    newsapp\core\Control::loadPagination(
                                         $pagination['count'],
                                         $pagination['itemsPerPage'],
                                         $pagination['linksCount'],

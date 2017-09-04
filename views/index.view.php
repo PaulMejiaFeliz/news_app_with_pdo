@@ -30,64 +30,16 @@
                     <thead>
                         <tr>
                             <th>
-                                <a
-                                <?php
-                                $order = [ 'o' => 'title' ];
-                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                        $order['r'] = 'false';
-                                    } else {
-                                        $order['r'] = 'true';
-                                    }
-                                }
-                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                                ?>
-                                >Title</a>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Title', 'title'); ?> 
                             </th>
                             <th>
-                                <a
-                                <?php
-                                $order = [ 'o' => 'user' ];
-                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                        $order['r'] = 'false';
-                                    } else {
-                                        $order['r'] = 'true';
-                                    }
-                                }
-                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                                ?>
-                                >Author</a>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Author', 'user'); ?>
                             </th>
                             <th>
-                                <a
-                                <?php
-                                $order = [ 'o' => 'created_at' ];
-                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                        $order['r'] = 'false';
-                                    } else {
-                                        $order['r'] = 'true';
-                                    }
-                                }
-                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                                ?>
-                                >Posted Date</a>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Posted Date', 'created_at'); ?>
                             </th>
                             <th>
-                                <a
-                                <?php
-                                $order = [ 'o' => 'views' ];
-                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                        $order['r'] = 'false';
-                                    } else {
-                                        $order['r'] = 'true';
-                                    }
-                                }
-                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                                ?>
-                                >Views Count</a>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Views Count', 'views'); ?>
                             </th>
                         </tr>
                     </thead>
@@ -106,7 +58,7 @@
                     <div class='col-md-10 col-md-offset-1 text-center'>
                         <?php
                         if (isset($pagination)) {
-                            newsapp\core\Pagination::load(
+                            newsapp\core\Control::loadPagination(
                                 $pagination['count'],
                                 $pagination['itemsPerPage'],
                                 $pagination['linksCount'],

@@ -206,7 +206,7 @@ class QueryBuilder
     public function insert(string $table, array $content) : int
     {
         if (!count($content)) {
-            throw new NoContentException();
+            throw new \Exception('No content');
         }
 
         $query = "INSERT INTO {$table} (";
@@ -245,7 +245,7 @@ class QueryBuilder
     public function update(string $table, int $id, array $content) : bool
     {
         if (!count($content)) {
-            throw new NoContentException();
+            throw new \Exception('No content');
         }
 
         $query = "UPDATE {$table} SET";

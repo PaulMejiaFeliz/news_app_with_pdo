@@ -6,7 +6,7 @@
                 <span class='input-group-addon'>Search By</span>
                 <select name='s' class='form-control' required >
                     <?php foreach ($searchFields as $key => $field) : ?>
-                        <option value='<?= $key ?>' <?= ($_GET['s'] ?? 0) == $key ? 'selected=\'selected\'' : '' ?> ><?= $field ?></option>
+                        <option value='<?= $key ?>' <?= ($_GET['s'] ?? array_keys($searchFields)[0]) == $key ? 'selected=\'selected\'' : '' ?> ><?= $field ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -25,52 +25,16 @@
                 <table class='table'>
                     <thead>
                         <tr>
-                        <th>
-                        <a
-                        <?php
-                        $order = [ 'o' => 'title' ];
-                        if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                            if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                $order['r'] = 'false';
-                            } else {
-                                $order['r'] = 'true';
-                            }
-                        }
-                        echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                        ?>
-                        >Title</a>
-                    </th>
-                    <th>Author</th>
-                    <th>
-                        <a
-                        <?php
-                        $order = [ 'o' => 'created_at' ];
-                        if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                            if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                $order['r'] = 'false';
-                            } else {
-                                $order['r'] = 'true';
-                            }
-                        }
-                        echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                        ?>
-                        >Posted Date</a>
-                    </th>
-                    <th>
-                        <a
-                        <?php
-                        $order = [ 'o' => 'views' ];
-                        if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
-                            if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                                $order['r'] = 'false';
-                            } else {
-                                $order['r'] = 'true';
-                            }
-                        }
-                        echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
-                        ?>
-                        >Views Count</a>
-                    </th>
+                            <th>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Title', 'title'); ?> 
+                            </th>
+                            <th>Author</th>
+                            <th>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Posted Date', 'created_at'); ?>
+                            </th>
+                            <th>
+                                <?= newsapp\core\Control::loadOrderByAnchor('Views Count', 'views'); ?>
+                            </th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -93,7 +57,7 @@
                     <div class='col-md-10 col-md-offset-1 text-center'>
                         <?php
                         if (isset($pagination)) {
-                            newsapp\core\Pagination::load(
+                            newsapp\core\Control::loadPagination(
                                 $pagination['count'],
                                 $pagination['itemsPerPage'],
                                 $pagination['linksCount'],

@@ -3,9 +3,9 @@
 use newsapp\core\Request;
 
 /**
- * Class used to display the pagination controls
+ * Class used to display different controls
  */
-class Pagination
+class Control
 {
     /**
      * Displays the pagination controls
@@ -16,7 +16,7 @@ class Pagination
      * @param int $current Current page
      * @return void
      */
-    public static function load(int $count, int $itemsPerPage, int $linksCount, int $current) : void
+    public static function loadPagination(int $count, int $itemsPerPage, int $linksCount, int $current) : void
     {
         if (!$count) {
             return;
@@ -37,5 +37,25 @@ class Pagination
         $page['linksCount'] = floor($page['linksCount']/2);
 
         require 'views/partials/pagination.view.php';
+    }
+
+    /**
+     * Retrieves an a tag for an order by column title
+     *
+     * @param string $label Labe of the a tag
+     * @param string $value Name of the column to order by
+     * @return string
+     */
+    public static function loadOrderByAnchor(string $label, string $value) : string
+    {
+        $order = [ 'o' => $value ];
+        if (isset($_GET['o']) && $_GET['o'] == $value) {
+            if (isset($_GET['r']) && $_GET['r'] == 'true') {
+                $order['r'] = 'false';
+            } else {
+                $order['r'] = 'true';
+            }
+        }
+        return '<a href=\'' . Request::addQueryString($order) . "'>{$label}</a>";
     }
 }
