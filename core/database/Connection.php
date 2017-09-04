@@ -30,17 +30,20 @@ class Connection
     /**
      * If exists retieves an instance of a PDO object, oterwise creates a new one
      *
-     * @param array $config infomation tha will beb used to connect to the database (host, dbname, user, password)
-     * @return PDO The istance of the PDO object
+     * @param string $host Name or ip of the host
+     * @param string $dbName Name of the database
+     * @param string $user User that will e used to connect to the database
+     * @param string $password Password for the given user
+     * @return \PDO The istance of the PDO object
      * @throws PDOException if connection couldn't be established
      */
-    final public static function getConnection(array $config) : \PDO
+    final public static function getConnection(string $host, string $dbName, string $user, string $password) : \PDO
     {
         try {
             self::$pdo = self::$pdo ?? new \PDO(
-                "mysql:host={$config['host']};dbname={$config['dbName']};",
-                $config['user'],
-                $config['password']
+                "mysql:host={$host};dbname={$dbName};",
+                $user,
+                $password
             );
             return self::$pdo;
         } catch (PDOException $e) {

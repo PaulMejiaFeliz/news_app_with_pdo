@@ -5,6 +5,7 @@
         "classmap": [
             "./"
         ],
+        "files": ["config.php"],
         "psr-4" : {
             "newsapp\\" : ""
         }

@@ -8,7 +8,7 @@ App::bind('config', require 'config.php');
 
 App::bind(
     'connection',
-    Connection::getConnection(App::get('config')['database'])
+    Connection::getConnection($_ENV['host'], $_ENV['dbName'], $_ENV['user'], $_ENV['password'])
 );
 
 App::bind(
