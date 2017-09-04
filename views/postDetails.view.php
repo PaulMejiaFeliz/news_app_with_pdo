@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <?php endforeach; ?>
-                        <?php elseif (!isset($_GET['page'])) : ?>
+                        <?php elseif (!isset($_GET['p'])) : ?>
                         <h4 class='text-center'>No Comments</h4>
                         <?php else : ?>
                             <h4 class='text-center'>Comments Page Not Found</h4>                            
@@ -208,5 +208,3 @@
         </div>
     </div>
 </div>
-
-<script src='public/js/modals.js'></script>
