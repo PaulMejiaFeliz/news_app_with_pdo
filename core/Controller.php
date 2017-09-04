@@ -1,8 +1,18 @@
-<?php
+<?php namespace newsapp\core;
 
+/**
+ * Base class of creating controllers
+ */
 abstract class Controller
 {
-    protected function view($view, $data = [])
+    /**
+     * Displays the given view within the header and footer of the page
+     *
+     * @param string $view name off the view ta will be diplayed
+     * @param array $data variables that the view will use
+     * @return void
+     */
+    protected function view(string $view, array $data = []) : void
     {
         $this->startSession();
         extract($data);
@@ -11,7 +21,12 @@ abstract class Controller
         require 'views/partials/foot.view.php';
     }
 
-    protected function startSession()
+    /**
+     * If the session isn't started, starts it
+     *
+     * @return void
+     */
+    protected function startSession() : void
     {
         if (session_status() != PHP_SESSION_ACTIVE) {
             session_start();

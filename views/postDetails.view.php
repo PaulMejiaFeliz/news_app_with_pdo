@@ -27,7 +27,7 @@
                     </div>
                 </div>
                 <div class='panel-body'>
-                    <?php foreach($post['content'] ?? '' as $content) : ?>
+                    <?php foreach ($post['content'] ?? '' as $content) : ?>
                         <p><?= $content ?></p>
                     <?php endforeach ?>
                 </div>
@@ -53,12 +53,12 @@
                                                 <h5>
                                                     <?= $comment['user']['name'] ?? '' ?> <?= $comment['user']['lastName'] ?? '' ?>
                                                     -
-                                                    <?php 
-                                                        if ($comment['updated_at'] != '0000-00-00 00:00:00') {
-                                                            echo $comment['updated_at'];
-                                                        } else {
-                                                            echo $comment['created_at'] ?? '';
-                                                        }
+                                                    <?php
+                                                    if ($comment['updated_at'] != '0000-00-00 00:00:00') {
+                                                        echo $comment['updated_at'];
+                                                    } else {
+                                                        echo $comment['created_at'] ?? '';
+                                                    }
                                                     ?>
                                                 </h5>
                                             </div>
@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <?php endforeach; ?>
-                        <?php elseif(!isset($_GET['page'])) : ?>
+                        <?php elseif (!isset($_GET['page'])) : ?>
                         <h4 class='text-center'>No Comments</h4>
                         <?php else : ?>
                             <h4 class='text-center'>Comments Page Not Found</h4>                            
@@ -91,16 +91,16 @@
                     <div class='row'>
                         <div class='col-md-10 col-md-offset-1 text-center'>
                             <?php
-                                if (isset($pagination)) {
-                                    if ($pagination['count'] > 0) {
-                                        Pagination::load(
-                                            $pagination['count'],
-                                            $pagination['itemsPerPage'], 
-                                            $pagination['linksCount'],
-                                            $pagination['current']
-                                        );
-                                    }
+                            if (isset($pagination)) {
+                                if ($pagination['count'] > 0) {
+                                    newsapp\core\Pagination::load(
+                                        $pagination['count'],
+                                        $pagination['itemsPerPage'],
+                                        $pagination['linksCount'],
+                                        $pagination['current']
+                                    );
                                 }
+                            }
                             ?>
                         </div>
                     </div>
@@ -125,7 +125,9 @@
                             <input type='hidden' name='_method' value='patch'>
                             <input id='editCommentFormCommentId' type='hidden' name='commentId'/>
                             <div class='form-group input-group'>
-                                <textarea id='editCommentFormCommentContent' cols='60' rows='3' class='form-control' type='text' name='content' required><?php $comment['content'] ?? '' ?></textarea>
+                                <textarea id='editCommentFormCommentContent' cols='60' rows='3' class='form-control' type='text' name='content' required>
+                                    <?php $comment['content'] ?? '' ?>
+                                </textarea>
                             </div>
                             <div class='text-center'>
                                 <input type='submit' class='btn btn-primary' value='Edit'>

@@ -4,7 +4,7 @@
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-    <title>News App<?= isset($title)? ' - $title' : '' ?></title>
+    <title>News App<?= isset($title)? " - {$title}" : '' ?></title>
     <link rel='stylesheet' href='/public/bootstrap/css/bootstrap.css'>
     <link rel='stylesheet' href='/public/css/site.css'>
 </head>
@@ -21,13 +21,13 @@
                 <a class='navbar-brand' href='/'>News App</a>
             </div>
             <ul class='nav navbar-nav'>
-                <?php if(isset($_SESSION['logged'])) : ?>
+                <?php if (isset($_SESSION['logged'])) : ?>
                 <li><a href='/newPost'>New Post</a></li>
                 <li><a href='/myPosts'>My Posts</a></li>
                 <?php endif; ?>
             </ul>
             <ul class='nav navbar-nav navbar-right'>
-            <?php if(isset($_SESSION['logged'])) : ?>
+            <?php if (isset($_SESSION['logged'])) : ?>
                 <li><a><?= "{$_SESSION['user']['name']} {$_SESSION['user']['lastName']}"; ?></a></li>
                 <li><a href='/logout'>Logout</a></li>
                 <?php else : ?>

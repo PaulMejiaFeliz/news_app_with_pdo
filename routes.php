@@ -1,5 +1,7 @@
 <?php
 
+use newsapp\core\App;
+
 $router = App::get('router');
 $router->get('', 'Home@index');
 $router->get('logout', 'Account@logout');

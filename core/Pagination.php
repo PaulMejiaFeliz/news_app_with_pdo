@@ -1,35 +1,51 @@
-<?php
+<?php namespace newsapp\core;
 
+/**
+ * Class used to display the pagination controls
+ */
 class Pagination
 {
+    /**
+     * Displays the pagination controls
+     *
+     * @param int $count Total number of items
+     * @param int $itemsPerPage Number of items per page
+     * @param int $linksCount Maximun number of links in the pagination controls
+     * @param int $current Current page
+     * @return void
+     */
     public static function load(int $count, int $itemsPerPage, int $linksCount, int $current) : void
     {
-        $paginationConfig = [];
+        if (!$count) {
+            return;
+        }
+        
+        $page = [];
 
-        $paginationConfig['url'] = Request::queryString();
-        if ($paginationConfig['url'] != null) {
-            $strings = explode('&', $paginationConfig['url']);
-            $paginationConfig['url'] = '';
+        $page['url'] = Request::queryString();
+        if ($page['url'] != null) {
+            $strings = explode('&', $page['url']);
+            $page['url'] = '';
             foreach ($strings as $s) {
                 $string = explode('=', $s);
                 if ($string[0] != 'page') {
-                    $paginationConfig['url'] .= "{$string[0]}={$string[1]}&";
+                    $page['url'] .= "{$string[0]}={$string[1]}&";
                 }
             }
-            $paginationConfig['url'] = Request::uri().'?'. $paginationConfig['url'] . 'page=';
+            $page['url'] = Request::uri().'?'. $page['url'] . 'page=';
         } else {
-            $paginationConfig['url'] = Request::uri().'?page=';
+            $page['url'] = Request::uri().'?page=';
         }
 
-        $paginationConfig['count'] = $count;
-        $paginationConfig['itemsPerPage'] = $itemsPerPage;
-        $paginationConfig['linksCount'] = $linksCount;
-        $paginationConfig['current'] = $current;
+        $page['count'] = $count;
+        $page['itemsPerPage'] = $itemsPerPage;
+        $page['linksCount'] = $linksCount;
+        $page['current'] = $current;
 
-        $paginationConfig['pageCount'] = ceil($paginationConfig['count'] / $paginationConfig['itemsPerPage']);
-        $paginationConfig['prevDisabled'] = $paginationConfig['current'] == 1 ? 'disabled' : '';
-        $paginationConfig['nextDisabled'] = $paginationConfig['current'] == $paginationConfig['pageCount'] ? 'disabled' : '';
-        $paginationConfig['linksCount'] = floor($paginationConfig['linksCount']/2);
+        $page['pageCount'] = ceil($page['count'] / $page['itemsPerPage']);
+        $page['prevDisabled'] = $page['current'] == 1 ? 'disabled' : '';
+        $page['nextDisabled'] = $page['current'] == $page['pageCount'] ? 'disabled' : '';
+        $page['linksCount'] = floor($page['linksCount']/2);
 
         require 'views/partials/pagination.view.php';
     }

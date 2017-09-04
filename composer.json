@@ -1,7 +1,12 @@
 {
+    "name": "newsapp",
+    "description": "Newsapp website",
     "autoload": {
-     "classmap": [
-         "./"
-     ]   
+        "classmap": [
+            "./"
+        ],
+        "psr-4" : {
+            "newsapp\\" : ""
+        }
     }
 }

@@ -1,8 +1,19 @@
-<?php
+<?php namespace newsapp\controllers;
 
+use newsapp\core\App;
+use newsapp\core\Controller;
+
+/**
+ * Class with the comments CRUD
+ */
 class CommentsController extends Controller
 {
-    public function addComment()
+    /**
+     * Creates a new comment in a news
+     *
+     * @return void
+     */
+    public function addComment() : void
     {
         $this->startSession();
         
@@ -11,11 +22,13 @@ class CommentsController extends Controller
             $user = $_SESSION['user'];
 
             if (strlen(trim($newId)) == 0) {
-                return $this->view('notFound', [ 'message' => 'Post not found' ]);
+                $this->view('notFound', [ 'message' => 'Post not found' ]);
+                return;
             } else {
                 $post = App::get('qBuilder')->selectById('news', $newId);
                 if ($post['is_deleted']) {
-                    return $this->view('notFound', [ 'message' => 'Post not found' ]);
+                    $this->view('notFound', [ 'message' => 'Post not found' ]);
+                    return;
                 }
             }
             if (strlen(trim($content)) > 0) {
@@ -30,64 +43,24 @@ class CommentsController extends Controller
                     ]
                 );
             }
-            return header("Location: /postDetails?id={$newId}");
+            header("Location: /postDetails?id={$newId}");
+            return;
         }
-        return header('Location: /login');
+        header('Location: /login');
     }
 
-    public function getComments($newId, $itemsPerPage = 10, $page = 0)
-    {
-        $this->startSession();
-
-        $comments = App::get('qBuilder')->select(
-            'news_comments',
-            [
-                'new' => $newId,
-                'is_deleted' => 0
-            ],
-            [],
-            [],
-            'created_at DESC',
-            ($page - 1) * $itemsPerPage,
-            $itemsPerPage
-        );
-        
-        $comments = array_map(
-            function($comment) {
-                if (isset($comment['user'])) {
-                    if (isset($_SESSION['logged'])) {
-                        if ($comment['user'] == $_SESSION['user']['id']) {
-                            $comment['owner'] = true;
-                        } else {
-                            $comment['owner'] = false;                        
-                        }
-                    } else {
-                        $comment['owner'] = false;                        
-                    }
-                    $comment['user'] = App::get('qBuilder')->selectById(
-                        'user',
-                        $comment['user'],
-                        [
-                            'name',
-                            'lastName',
-                            'email'
-                        ]
-                    );
-                }
-                return $comment;
-            },
-            $comments
-        );
-
-        return $comments;
-    }
-
-    public function editComment()
+    /**
+     * Modifies an existing comment
+     *
+     * @return void
+     */
+    public function editComment() : void
     {
         $this->startSession();
         
         if (!isset($_SESSION['logged'])) {
-            return header('Location: /login');
+            header('Location: /login');
+            return;
         }
         
         if (isset($_POST['commentId'])) {
@@ -108,16 +81,23 @@ class CommentsController extends Controller
                     ]
                 );
             }
-            return header("Location: /postDetails?id={$comment['new']}");
+            header("Location: /postDetails?id={$comment['new']}");
+            return;
         }
-        return header('Location: /');        
+        header('Location: /');
     }
 
-    public function deleteComment()
+    /**
+     * Softly deletes a comment
+     *
+     * @return void
+     */
+    public function deleteComment() : void
     {
         $this->startSession();
         if (!$_SESSION['logged']) {
-            return header('Location: /login');
+            header('Location: /login');
+            return;
         }
         if (isset($_POST['commentId'])) {
             $qBuilder = App::get('qBuilder');
@@ -132,12 +112,68 @@ class CommentsController extends Controller
                     $comment['id'],
                     [
                         'is_deleted' => 1,
-                        'updated_at' => date('Y-m-d H:i:s')                        
+                        'updated_at' => date('Y-m-d H:i:s')
                     ]
                 );
             }
-            return header("Location: /postDetails?id={$comment['new']}");
+            header("Location: /postDetails?id={$comment['new']}");
+            return;
         }
-        return header('Location: /');
+        header('Location: /');
+    }
+
+    /**
+     * Retrieves the comments of a news
+     *
+     * @param int $newId Id of the news
+     * @param int $itemsPerPage Count of comments that will be returned for the current page
+     * @param int $page number of the current page
+     * @return array array of comments
+     */
+    public function getComments(int $newId, int $itemsPerPage = 10, int $page = 0) : array
+    {
+        $this->startSession();
+
+        $comments = App::get('qBuilder')->select(
+            'news_comments',
+            [
+                'new' => $newId,
+                'is_deleted' => 0
+            ],
+            [],
+            [],
+            'created_at DESC',
+            ($page - 1) * $itemsPerPage,
+            $itemsPerPage
+        );
+        
+        $comments = array_map(
+            function ($comment) {
+                if (isset($comment['user'])) {
+                    if (isset($_SESSION['logged'])) {
+                        if ($comment['user'] == $_SESSION['user']['id']) {
+                            $comment['owner'] = true;
+                        } else {
+                            $comment['owner'] = false;
+                        }
+                    } else {
+                        $comment['owner'] = false;
+                    }
+                    $comment['user'] = App::get('qBuilder')->selectById(
+                        'user',
+                        $comment['user'],
+                        [
+                            'name',
+                            'lastName',
+                            'email'
+                        ]
+                    );
+                }
+                return $comment;
+            },
+            $comments
+        );
+
+        return $comments;
     }
 }

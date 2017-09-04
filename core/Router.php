@@ -1,8 +1,16 @@
-<?php
+<?php namespace newsapp\core;
 
+/**
+ * Class use to call the action that match the request
+ */
 class Router
 {
-    protected $routes = [
+    /**
+     * Array of the posibles requests
+     *
+     * @var array
+     */
+    private $routes = [
         'GET' => [],
         'POST' => [],
         'PUT' => [],
@@ -10,50 +18,106 @@ class Router
         'ERROR' => ''
     ];
     
-    public function __construct($errorPage)
+    /**
+     *
+     * @param string $errorPage sets the default error page
+     */
+    public function __construct(string $errorPage)
     {
         $this->routes['ERROR'] = $errorPage;
     }
 
-    public function get($uri, $controller)
+    /**
+     * Set an action for a GET request
+     *
+     * @param string $uri URI of the request
+     * @param string $action action for the given URI
+     * @return void
+     */
+    public function get(string $uri, string $action) : void
     {
-        $this->routes['GET'][$uri] = $controller;
+        $this->routes['GET'][$uri] = $action;
     }
 
-    public function post($uri, $controller)
+    /**
+     * Set an action for a POST request
+     *
+     * @param string $uri URI of the request
+     * @param string $action action for the given URI
+     * @return void
+     */
+    public function post(string $uri, string $action) : void
     {
-        $this->routes['POST'][$uri] = $controller;
+        $this->routes['POST'][$uri] = $action;
     }
 
-    public function put($uri, $controller)
+    /**
+     * Set an action for a PUT request
+     *
+     * @param string $uri URI of the request
+     * @param string $action action for the given URI
+     * @return void
+     */
+    public function put(string $uri, string $action) : void
     {
-        $this->routes['PUT'][$uri] = $controller;
+        $this->routes['PUT'][$uri] = $action;
     }
 
-    public function delete($uri, $controller)
+    /**
+     * Set an action for a DELETE request
+     *
+     * @param string $uri URI of the request
+     * @param string $action action for the given URI
+     * @return void
+     */
+    public function delete(string $uri, string $action) : void
     {
-        $this->routes['DELETE'][$uri] = $controller;
+        $this->routes['DELETE'][$uri] = $action;
     }
 
-    public function direct($uri, $method = 'GET')
+    /**
+     * Finds and calls the action that matches the given request
+     *
+     * @param string $uri URI of the request
+     * @param string $method Method of the request
+     * @return void
+     */
+    public function direct(string $uri, string $method = 'GET') : void
     {
         if (array_key_exists($uri, $this->routes[$method])) {
-            return $this->action(
+            $this->action(
                 ...explode('@', $this->routes[$method][$uri])
             );
-        } else {
-            return $this->action(...explode('@', $this->routes['ERROR']));
+            return;
         }
+        $this->action(...explode('@', $this->routes['ERROR']));
     }
 
-    protected function action($controller, $action)
+    /**
+     * Check if the given action exist and calls it, otherwise calls the default error action
+     *
+     * @param string $controller Controller where the action is
+     * @param string $action Action that will be called
+     * @return void
+     */
+    private function action(string $controller, string $action) : void
     {
-        $controller .= 'Controller';
-        $controller = new $controller;
+        $controller = "newsapp\\controllers\\{$controller}Controller";
+        $controller = new $controller();
 
         if (method_exists($controller, $action)) {
-            return $controller->$action();
+            $controller->$action();
+            return;
         }
-        return $this->action(...explode('@', $this->routes['ERROR']));
+        
+        $error = explode('@', $this->routes['ERROR']);
+        $controller = "newsapp\\controllers\\{$error[0]}Controller";
+
+        $controller = new $controller();
+        
+        if (method_exists($controller, $error[1])) {
+            $controller->$error[1]();
+        }
+        
     }
 }

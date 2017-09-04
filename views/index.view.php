@@ -26,7 +26,7 @@
     <div class='row'>
         <div class='col-md-10 col-md-offset-1'>
             <?php if (isset($news)) : ?>
-                <?php foreach($news as $new) : ?>
+                <?php foreach ($news as $new) : ?>
                 <div class='row'>
                     <div class='col-md-10 col-md-offset-1'>
                         <div class='panel panel-default'>
@@ -48,14 +48,14 @@
                 <div class='row'>
                     <div class='col-md-10 col-md-offset-1 text-center'>
                         <?php
-                            if (isset($pagination)) {
-                                Pagination::load(
-                                    $pagination['count'],
-                                    $pagination['itemsPerPage'], 
-                                    $pagination['linksCount'],
-                                    $pagination['current']
-                                );
-                            }
+                        if (isset($pagination)) {
+                            newsapp\core\Pagination::load(
+                                $pagination['count'],
+                                $pagination['itemsPerPage'],
+                                $pagination['linksCount'],
+                                $pagination['current']
+                            );
+                        }
                         ?>
                     </div>
                 </div>

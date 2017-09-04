@@ -1,14 +1,26 @@
-<?php
+<?php namespace newsapp\controllers;
 
+use newsapp\core\App;
+use newsapp\core\Controller;
+
+/**
+ * Class used to manage accounts
+ */
 class AccountController extends Controller
 {
-    public function login()
+
+    /**
+     * Displays the login view
+     *
+     * @return void
+     */
+    public function login() : void
     {
         $this->startSession();
         if (isset($_SESSION['logged'])) {
             App::get('router')->direct('');
         } else {
-            return $this->view(
+            $this->view(
                 'login',
                 [
                     'title' => 'Login'
@@ -17,10 +29,15 @@ class AccountController extends Controller
         }
     }
 
-    public function loginPost()
+    /**
+     * If the credentials are right, lets the user login
+     *
+     * @return void
+     */
+    public function loginPost() : void
     {
         $this->startSession();
-        $title = 'Login';      
+        $title = 'Login';
         $errorMessage = [];
         extract($_POST);
         
@@ -53,7 +70,7 @@ class AccountController extends Controller
         if (isset($_SESSION['logged'])) {
             header('Location: /');
         } else {
-            return $this->view(
+            $this->view(
                 'login',
                 compact(
                     'title',
@@ -64,7 +81,12 @@ class AccountController extends Controller
         }
     }
 
-    public function logout()
+    /**
+     * Logouts the current user if where is any
+     *
+     * @return void
+     */
+    public function logout() : void
     {
         $this->startSession();
         if (isset($_SESSION['logged'])) {
@@ -75,13 +97,18 @@ class AccountController extends Controller
         header('Location: /');
     }
 
-    public function register()
+    /**
+     * Displays the register view
+     *
+     * @return void
+     */
+    public function register() : void
     {
         $this->startSession();
         if (isset($_SESSION['logged'])) {
             header('Location: /');
         } else {
-            return $this->view(
+            $this->view(
                 'register',
                 [
                     'title' => 'Register'
@@ -90,7 +117,12 @@ class AccountController extends Controller
         }
     }
 
-    public function registerPost()
+    /**
+     * If the given information fulfill the rules registers a new user
+     *
+     * @return void
+     */
+    public function registerPost() : void
     {
         $this->startSession();
 
@@ -116,7 +148,7 @@ class AccountController extends Controller
         if (strlen(trim($email)) == 0) {
             $errorMessage[] = 'The email is required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errorMessage[] = 'This email address is not valide.';            
+            $errorMessage[] = 'This email address is not valide.';
         } else {
             $user = count(
                 App::get('qBuilder')->select(
@@ -146,15 +178,15 @@ class AccountController extends Controller
             $_SESSION['user'] = $user;
             $_SESSION['logged'] = true;
     
-            $name = ';
-            $lastName = ';
-            $email = ';
-            $password = ';
+            $name = '';
+            $lastName = '';
+            $email = '';
+            $password = '';
         }
         if (isset($_SESSION['logged'])) {
             header('Location: /');
         } else {
-            return $this->view(
+            $this->view(
                 'register',
                 compact(
                     'title',

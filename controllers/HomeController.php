@@ -1,9 +1,19 @@
-<?php
+<?php namespace newsapp\controllers;
 
+use newsapp\core\App;
+use newsapp\core\Controller;
+
+/**
+ * Class that contains the news CRUD
+ */
 class HomeController extends Controller
 {
-
-    protected $filterFields = [
+    /**
+     * Array of the columns which the news can be filtered
+     *
+     * @var array
+     */
+    private $filterFields = [
         'title' => 'Title',
         //'user' => 'User',
         'views' => 'Views Count',
@@ -11,19 +21,26 @@ class HomeController extends Controller
         'updated_at' => 'Updated At'
     ];
 
-    public function index()
+    /**
+     * Displays the home page
+     *
+     * @return void
+     */
+    public function index() : void
     {
         $this->startSession();
         $title = 'Home';
         $searchFields = array_values($this->filterFields);
-        $filter = [ 'is_deleted' => 0 ];
+        $filter = [];
         if (isset($_GET['searchBy'])) {
             $filter[array_keys($this->filterFields)[$_GET['searchBy']]]= $_GET['value'];
         }
 
         $pagination['count'] = App::get('qBuilder')->count(
             'news',
-            [],
+            [
+                'is_deleted' => 0
+            ],
             $filter
         );
 
@@ -33,7 +50,9 @@ class HomeController extends Controller
         
         $news = App::get('qBuilder')->select(
             'news',
-            [],
+            [
+                'is_deleted' => 0
+            ],
             $filter,
             [],
             'created_at DESC',
@@ -41,7 +60,7 @@ class HomeController extends Controller
             $pagination['itemsPerPage']
         );
         $news = array_map(
-            function($new) {
+            function ($new) {
                 if (isset($new['user'])) {
                     $new['user'] = App::get('qBuilder')->selectById(
                         'user',
@@ -58,7 +77,7 @@ class HomeController extends Controller
             $news
         );
         
-        return $this->view(
+        $this->view(
             'index',
             compact(
                 'title',
@@ -69,11 +88,17 @@ class HomeController extends Controller
         );
     }
 
-    public function myPosts()
+    /**
+     * Displays a view with a list of news of the current user
+     *
+     * @return void
+     */
+    public function myPosts() : void
     {
         $this->startSession();
         if (!isset($_SESSION['logged'])) {
-            return header('Location: /login');
+            header('Location: /login');
+            return;
         }
         $title = 'My Posts';
         $searchFields = array_values($this->filterFields);
@@ -107,7 +132,7 @@ class HomeController extends Controller
         );
            
         $news = array_map(
-            function($new) {
+            function ($new) {
                 if (isset($new['user'])) {
                     $new['user'] = App::get('qBuilder')->selectById(
                         'user',
@@ -124,7 +149,7 @@ class HomeController extends Controller
             $news
         );
         
-        return $this->view(
+        $this->view(
             'myPosts',
             compact(
                 'title',
@@ -135,7 +160,12 @@ class HomeController extends Controller
         );
     }
 
-    public function postDetails()
+    /**
+     * Displays a view with the details of a news
+     *
+     * @return void
+     */
+    public function postDetails() : void
     {
         $this->startSession();
         if (isset($_GET['id'])) {
@@ -144,7 +174,7 @@ class HomeController extends Controller
 
             $post = $qBuilder->selectById('news', $_GET['id']);
             if ($post['is_deleted'] || !count($post)) {
-                header('Location: /notFound');                
+                header('Location: /notFound');
             }
 
             if (isset($post['user'])) {
@@ -165,7 +195,7 @@ class HomeController extends Controller
             }
             
             if (isset($post['content'])) {
-                $post['content'] = explode('\n',$post['content']);
+                $post['content'] = explode('\n', nl2br($post['content']));
             }
 
             $pagination['count'] = App::get('qBuilder')->count(
@@ -180,7 +210,15 @@ class HomeController extends Controller
             $pagination['linksCount'] = 5;
             $pagination['current'] = abs($_GET['page'] ?? 1);
 
-            $comments = (new CommentsController)->getComments($post['id'], $pagination['itemsPerPage'], $pagination['current']);
+            $comments = (new CommentsController())->getComments(
+                $post['id'],
+                $pagination['itemsPerPage'],
+                $pagination['current']
+            );
+
+            foreach ($comments as $key => $value) {
+                $comments[$key]['content'] = nl2br($value['content']);
+            }
             
             $qBuilder->update(
                 'news',
@@ -191,7 +229,7 @@ class HomeController extends Controller
             );
             $title = $post['title'] ?? '';
             
-            return $this->view(
+            $this->view(
                 'postDetails',
                 compact(
                     'post',
@@ -204,157 +242,198 @@ class HomeController extends Controller
         }
     }
 
-    public function newPost()
+    /**
+     * Displays the view with the form for creating a new post
+     *
+     * @return void
+     */
+    public function newPost() : void
     {
         $this->startSession();
         if (!isset($_SESSION['logged'])) {
             header('Location: /login');
-        } else {
-            return $this->view(
-                'newPost',
-                [
-                    'title' => 'New Post'
-                ]
-            );
+            return;
         }
+        $this->view(
+            'newPost',
+            [
+                'title' => 'New Post'
+            ]
+        );
     }
 
-    public function addPost()
+    /**
+     * Saves a new post in the database
+     *
+     * @return void
+     */
+    public function addPost() : void
     {
         $this->startSession();
+        if (!isset($_SESSION['logged'])) {
+            header('Location: /login');
+            return;
+        }
         
         $errorMessage = [];
         $title = 'New Post';
         extract($_POST);
-        if (isset($_SESSION['logged'])) {
-            $user = $_SESSION['user'];
-        
-            if (strlen(trim($postTitle)) < 5) {
-                $errorMessage[] = 'The title must have at least 5 charcters.';
-            }
-            if (strlen(trim($content)) == 0) {
-                $errorMessage[] = 'The content is required.';
-            }
-            if (count($errorMessage) == 0) {
+        $user = $_SESSION['user'];
+    
+        if (strlen(trim($postTitle)) < 5) {
+            $errorMessage[] = 'The title must have at least 5 charcters.';
+        }
+        if (strlen(trim($content)) == 0) {
+            $errorMessage[] = 'The content is required.';
+        }
+        if (count($errorMessage) == 0) {
 
-                $postId = App::get('qBuilder')->insert(
-                    'news',
-                    [
-                        'title' => $postTitle,
-                        'content' => $content,
-                        'user' => $user['id'],
-                        'created_at' => date('Y-m-d H:i:s')
-                    ]
-                );
-
-                return header("Location: /postDetails?id={$postId}");
-            }
-            return $this->view(
-                'newPost',
-                compact(
-                    'title',
-                    'errorMessage',
-                    'postTitle',
-                    'content'
-                )
+            $postId = App::get('qBuilder')->insert(
+                'news',
+                [
+                    'title' => $postTitle,
+                    'content' => $content,
+                    'user' => $user['id'],
+                    'created_at' => date('Y-m-d H:i:s')
+                ]
             );
-            
-        }
-        return header('Location: /login');
-    }
 
-    public function deletePost()
-    {
-        $this->startSession();
-        if (!$_SESSION['logged']) {
-            return header('Location: /login');
+            header("Location: /postDetails?id={$postId}");
+            return;
         }
-        if (isset($_POST['PostId'])) {
-            $id = $_POST['PostId'];
-            $qBuilder = App::get('qBuilder');
-
-            $post = $qBuilder->selectById('news', $id);
-            $title = $post['title'] ?? '';
-            $owner = true;
-            $exist = true;
-            
-            if (! $post['is_deleted']) {
-                if ($post['user'] === $_SESSION['user']['id']) {
-                    $qBuilder->update(
-                        'news',
-                        $post['id'],
-                        [
-                            'is_deleted' => 1,
-                            'updated_at' => date('Y-m-d H:i:s')                            
-                        ]
-                    );
-                } else {
-                    $owner = false;
-                }
-            } else {
-                $title = 'Deleted Post';                
-                $exist = false;
-            }
-
-            return $this->view(
-                'postDeleted',
-                compact(
-                    'title',
-                    'owner',
-                    'exist'
-                )
-            );
-        }
-        return $this->view(
-            'notFound'
+        $this->view(
+            'newPost',
+            compact(
+                'title',
+                'errorMessage',
+                'postTitle',
+                'content'
+            )
         );
     }
 
-    public function editPost()
+    /**
+     * Softly deletes a post
+     *
+     * @return void
+     */
+    public function deletePost() : void
     {
         $this->startSession();
         if (!isset($_SESSION['logged'])) {
-            return header('Location: /login');
+            header('Location: /login');
+            return;
         }
-        if (isset($_GET['id'])) {
-            $qBuilder = App::get('qBuilder');
-
-            $post = $qBuilder->selectById('news', $_GET['id']);
-            $id = $post['id'];
-            $title = 'Edit Post';
-            $postTitle = $post['title'] ?? '';
-            $content = $post['content'] ?? '';
-            $owner = true;
-            $exist = true;
-            if (! $post['is_deleted']) {
-                if ($post['user'] !== $_SESSION['user']['id']) {
-                    $owner = false;
-                }
-            } else {
-                $title = 'Post not found';
-                $exist = false;
-            }
-
-            return $this->view(
-                'editPost',
-                compact(
-                    'title',
-                    'owner',
-                    'exist',
-                    'postTitle',
-                    'content',
-                    'id'
-                )
+        if (!isset($_POST['PostId'])) {
+            $this->view(
+                'notFound'
             );
+            return;
         }
+        $id = $_POST['PostId'];
+        $qBuilder = App::get('qBuilder');
+
+        $post = $qBuilder->selectById('news', $id);
+        $title = $post['title'] ?? '';
+        $owner = true;
+        $exist = true;
+
+        if (! count($post)) {
+            $this->view(
+                'notFound'
+            );
+            return;
+        }
+        
+        if (! $post['is_deleted']) {
+            if ($post['user'] === $_SESSION['user']['id']) {
+                $qBuilder->update(
+                    'news',
+                    $post['id'],
+                    [
+                        'is_deleted' => 1,
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]
+                );
+            } else {
+                $owner = false;
+            }
+        } else {
+            $title = 'Deleted Post';
+            $exist = false;
+        }
+
+        $this->view(
+            'postDeleted',
+            compact(
+                'title',
+                'owner',
+                'exist'
+            )
+        );
     }
 
-    public function modifyPost()
+    /**
+     * Displays the view with the form for edit an existing post
+     *
+     * @return void
+     */
+    public function editPost() : void
+    {
+        $this->startSession();
+        if (!isset($_SESSION['logged'])) {
+            header('Location: /login');
+            return;
+        }
+        if (!isset($_GET['id'])) {
+            $this->view(
+                'notFound'
+            );
+            return;
+        }
+        $qBuilder = App::get('qBuilder');
+
+        $post = $qBuilder->selectById('news', $_GET['id']);
+        $id = $post['id'];
+        $title = 'Edit Post';
+        $postTitle = $post['title'] ?? '';
+        $content = $post['content'] ?? '';
+        $owner = true;
+        $exist = true;
+        if (! $post['is_deleted']) {
+            if ($post['user'] !== $_SESSION['user']['id']) {
+                $owner = false;
+            }
+        } else {
+            $title = 'Post not found';
+            $exist = false;
+        }
+
+        $this->view(
+            'editPost',
+            compact(
+                'title',
+                'owner',
+                'exist',
+                'postTitle',
+                'content',
+                'id'
+            )
+        );
+    }
+
+    /**
+     * Updates the given information of an existing post
+     *
+     * @return void
+     */
+    public function modifyPost() : void
     {
         $this->startSession();
         
         if (!isset($_SESSION['logged'])) {
-            return header('Location: /login');
+            header('Location: /login');
+            return;
         }
         
         $qBuilder = App::get('qBuilder');
@@ -387,7 +466,8 @@ class HomeController extends Controller
                         ]
                     );
     
-                    return header("Location: /postDetails?id={$post['id']}");
+                    header("Location: /postDetails?id={$post['id']}");
+                    return;
                 }
             }
         } else {
@@ -395,7 +475,7 @@ class HomeController extends Controller
             $exist = false;
         }
 
-        return $this->view(
+        $this->view(
             'editPost',
             compact(
                 'title',
@@ -409,9 +489,14 @@ class HomeController extends Controller
         );
     }
 
-    public function notFound()
+    /**
+     * Displays the default error page
+     *
+     * @return void
+     */
+    public function notFound() : void
     {
-        return $this->view(
+        $this->view(
             'notFound',
             [
                 'title' => 'Page Not Found'

@@ -16,7 +16,7 @@
                 <div class='row'>
                     <ul>
                         <?php if (isset($errorMessage)) : ?>
-                            <?php foreach($errorMessage as $message) : ?>
+                            <?php foreach ($errorMessage as $message) : ?>
                                 <li class='text-danger'><?= $message ?></li>
                             <?php endforeach; ?>
                         <?php endif; ?>
