@@ -49,13 +49,17 @@ class Control
     public static function loadOrderByAnchor(string $label, string $value) : string
     {
         $order = [ 'o' => $value ];
+        $icon = '';
+        $order['r'] = 'false';
         if (isset($_GET['o']) && $_GET['o'] == $value) {
             if (isset($_GET['r']) && $_GET['r'] == 'true') {
-                $order['r'] = 'false';
+                $icon = '<i class=\'glyphicon glyphicon-arrow-up\'></i>';
             } else {
                 $order['r'] = 'true';
+                $icon = '<i class=\'glyphicon glyphicon-arrow-down\'></i>';
             }
+            
         }
-        return '<a href=\'' . Request::addQueryString($order) . "'>{$label}</a>";
+        return '<a href=\'' . Request::addQueryString($order) . "'>{$label} {$icon}</a>";
     }
 }

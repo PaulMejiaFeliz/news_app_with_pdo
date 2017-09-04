@@ -148,7 +148,7 @@ class AccountController extends Controller
         if (strlen(trim($email)) == 0) {
             $errorMessage[] = 'The email is required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errorMessage[] = 'This email address is not valide.';
+            $errorMessage[] = 'This email address is not valid.';
         } else {
             $user = count(
                 App::get('qBuilder')->select(

@@ -1,6 +1,6 @@
 function fillFormEditComment(id) {
     document.getElementById("editCommentFormCommentId").value = id;
-    document.getElementById("editCommentFormCommentContent").innerHTML = document.getElementById("commentContent"+id).innerHTML;
+    document.getElementById("editCommentFormCommentContent").innerHTML = document.getElementById("commentContent"+id).innerText;
 }
 
 function fillFormDeleteComment(id) {

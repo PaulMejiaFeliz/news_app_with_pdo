@@ -20,21 +20,23 @@
                 </button>
                 <a class='navbar-brand' href='/'>News App</a>
             </div>
-            <ul class='nav navbar-nav'>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class='nav navbar-nav'>
+                    <?php if (isset($_SESSION['logged'])) : ?>
+                    <li><a href='/newPost'>New Post</a></li>
+                    <li><a href='/myPosts'>My Posts</a></li>
+                    <?php endif; ?>
+                </ul>
+                <ul class='nav navbar-nav navbar-right'>
                 <?php if (isset($_SESSION['logged'])) : ?>
-                <li><a href='/newPost'>New Post</a></li>
-                <li><a href='/myPosts'>My Posts</a></li>
-                <?php endif; ?>
-            </ul>
-            <ul class='nav navbar-nav navbar-right'>
-            <?php if (isset($_SESSION['logged'])) : ?>
-                <li><a><?= "{$_SESSION['user']['name']} {$_SESSION['user']['lastName']}"; ?></a></li>
-                <li><a href='/logout'>Logout</a></li>
-                <?php else : ?>
-                <li><a href='/register'>Register</a></li>
-                <li><a href='/login'>Login</a></li>
-                <?php endif; ?>
-            </ul>
+                    <li><a><?= "{$_SESSION['user']['name']} {$_SESSION['user']['lastName']}"; ?></a></li>
+                    <li><a href='/logout'>Logout</a></li>
+                    <?php else : ?>
+                    <li><a href='/register'>Register</a></li>
+                    <li><a href='/login'>Login</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
     </nav>
     <div class='container'>
