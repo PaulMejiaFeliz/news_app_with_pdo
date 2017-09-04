@@ -1,5 +1,7 @@
 <?php namespace newsapp\core;
 
+use newsapp\core\Request;
+
 /**
  * Class used to display the pagination controls
  */
@@ -22,20 +24,7 @@ class Pagination
         
         $page = [];
 
-        $page['url'] = Request::queryString();
-        if ($page['url'] != null) {
-            $strings = explode('&', $page['url']);
-            $page['url'] = '';
-            foreach ($strings as $s) {
-                $string = explode('=', $s);
-                if ($string[0] != 'page') {
-                    $page['url'] .= "{$string[0]}={$string[1]}&";
-                }
-            }
-            $page['url'] = Request::uri().'?'. $page['url'] . 'page=';
-        } else {
-            $page['url'] = Request::uri().'?page=';
-        }
+        $page['url'] = Request::addQueryString(['p' => '']);
 
         $page['count'] = $count;
         $page['itemsPerPage'] = $itemsPerPage;

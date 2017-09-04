@@ -103,7 +103,6 @@ class QueryBuilder
         }
 
         $statement->execute();
-        
         return  $statement->rowCount() ? $statement->fetchAll(\PDO::FETCH_ASSOC) : [];
     }
     

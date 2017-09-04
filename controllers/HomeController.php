@@ -22,6 +22,19 @@ class HomeController extends Controller
     ];
 
     /**
+     * Array of the columns which the news can be ordered by
+     *
+     * @var array
+     */
+    private $oderByFields = [
+        'title',
+        'user',
+        'views',
+        'created_at',
+        //'updated_at'
+    ];
+
+    /**
      * Displays the home page
      *
      * @return void
@@ -30,11 +43,29 @@ class HomeController extends Controller
     {
         $this->startSession();
         $title = 'Home';
-        $searchFields = array_values($this->filterFields);
+        $searchFields = $this->filterFields;
         $filter = [];
-        if (isset($_GET['searchBy'])) {
-            $filter[array_keys($this->filterFields)[$_GET['searchBy']]]= $_GET['value'];
+        $order = 'created_at DESC';
+
+        if (isset($_GET['s']) && isset($_GET['v'])) {
+            if (array_key_exists($_GET['s'], $this->filterFields)) {
+                $filter[$_GET['s']] = $_GET['v'];
+            }
+
         }
+        
+        if (isset($_GET['o'])) {
+            if (in_array($_GET['o'], $this->oderByFields)) {
+                $order = $_GET['o'];
+                
+                if (isset($_GET['r'])) {
+                    if ($_GET['r'] == 'true') {
+                        $order .= ' DESC';
+                    }
+                }
+            }
+        }
+
 
         $pagination['count'] = App::get('qBuilder')->count(
             'news',
@@ -44,9 +75,16 @@ class HomeController extends Controller
             $filter
         );
 
-        $pagination['itemsPerPage'] = 3;
+        $pagination['itemsPerPage'] = 10;
         $pagination['linksCount'] = 5;
-        $pagination['current'] = abs($_GET['page'] ?? 1);
+        if (isset($_GET['p'])) {
+            $pagination['current'] = (int)$_GET['p'];
+            if ($pagination['current'] <= 0) {
+                $pagination['current'] = 1;
+            }
+        } else {
+            $pagination['current'] = 1;
+        }
         
         $news = App::get('qBuilder')->select(
             'news',
@@ -55,7 +93,7 @@ class HomeController extends Controller
             ],
             $filter,
             [],
-            'created_at DESC',
+            $order,
             ($pagination['current'] - 1) * $pagination['itemsPerPage'],
             $pagination['itemsPerPage']
         );
@@ -101,11 +139,28 @@ class HomeController extends Controller
             return;
         }
         $title = 'My Posts';
-        $searchFields = array_values($this->filterFields);
+        $searchFields = $this->filterFields;
         $filter = [];
-        if (isset($_GET['searchBy'])) {
-            $filter[array_keys($this->filterFields)[$_GET['searchBy']]]= $_GET['value'];
+        $order = 'created_at DESC';
+
+        if (isset($_GET['s']) && isset($_GET['v'])) {
+            if (array_key_exists($_GET['s'], $this->filterFields)) {
+                $filter[$_GET['s']] = $_GET['v'];
+            }
         }
+
+        if (isset($_GET['o'])) {
+            if (in_array($_GET['o'], $this->oderByFields)) {
+                $order = $_GET['o'];
+
+                if (isset($_GET['r'])) {
+                    if ($_GET['r'] == 'true') {
+                        $order .= ' DESC';
+                    }
+                }
+            }
+        }
+
 
         $pagination['count'] = App::get('qBuilder')->count(
             'news',
@@ -115,9 +170,16 @@ class HomeController extends Controller
             $filter
         );
 
-        $pagination['itemsPerPage'] = 3;
+        $pagination['itemsPerPage'] = 9;
         $pagination['linksCount'] = 5;
-        $pagination['current'] = abs($_GET['page'] ?? 1);
+        if (isset($_GET['p'])) {
+            $pagination['current'] = (int)$_GET['p'];
+            if ($pagination['current'] <= 0) {
+                $pagination['current'] = 1;
+            }
+        } else {
+            $pagination['current'] = 1;
+        }
 
         $news = App::get('qBuilder')->select(
             'news',
@@ -126,7 +188,7 @@ class HomeController extends Controller
             ],
             $filter,
             [],
-            'created_at DESC',
+            $order,
             ($pagination['current'] - 1) * $pagination['itemsPerPage'],
             $pagination['itemsPerPage']
         );
@@ -208,7 +270,14 @@ class HomeController extends Controller
 
             $pagination['itemsPerPage'] = 3;
             $pagination['linksCount'] = 5;
-            $pagination['current'] = abs($_GET['page'] ?? 1);
+            if (isset($_GET['p'])) {
+                $pagination['current'] = (int)$_GET['p'];
+                if ($pagination['current'] <= 0) {
+                    $pagination['current'] = 1;
+                }
+            } else {
+                $pagination['current'] = 1;
+            }
 
             $comments = (new CommentsController())->getComments(
                 $post['id'],

@@ -7,15 +7,15 @@
             <form action='/' method='get' class='form-inline'>
                 <div class='form-group input-group'>
                     <span class='input-group-addon'>Search By</span>
-                    <select name='searchBy' class='form-control' required >
+                    <select name='s' class='form-control' required >
                         <?php foreach ($searchFields as $key => $field) : ?>
-                            <option value='<?= $key ?>' <?= ($_GET['searchBy'] ?? 0) == $key ? 'selected=\'selected\'' : '' ?> ><?= $field ?></option>
+                            <option value='<?= $key ?>' <?= ($_GET['s'] ?? array_keys($searchFields)[0]) == $key ? 'selected=\'selected\'' : '' ?> ><?= $field ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class='form-group input-group'>
                     <span class='input-group-addon'>Value</span>
-                    <input class='form-control' type='text' name='value' required value='<?= $_GET['value'] ?? '' ?>'>
+                    <input class='form-control' type='text' name='v' required value='<?= $_GET['v'] ?? '' ?>'>
                 </div>
                 <input class='btn btn-primary' type='submit' value='Search'/>
                 <a class='btn btn-default' href='/'>Clear</a>
@@ -26,25 +26,82 @@
     <div class='row'>
         <div class='col-md-10 col-md-offset-1'>
             <?php if (isset($news)) : ?>
-                <?php foreach ($news as $new) : ?>
-                <div class='row'>
-                    <div class='col-md-10 col-md-offset-1'>
-                        <div class='panel panel-default'>
-                            <div class='panel-footer'>
-                                <div class='row'>
-                                    <div class='col-md-6'>
-                                        <h5>views: <?= $new['views'] ?? '' ?></h5>
-                                        <h3><a href='/postDetails?id=<?= $new['id'] ?? '' ?>'><?= $new['title'] ?? '' ?></a></h3>
-                                    </div>
-                                    <div class='col-md-6'>
-                                        <h5 class='text-right'>Posted at <?= $new['created_at'] ?? '' ?> by <?= $new['user']['name'] ?? '' ?> <?= $new['user']['lastName'] ?? '' ?></h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                <table class='table'>
+                    <thead>
+                        <tr>
+                            <th>
+                                <a
+                                <?php
+                                $order = [ 'o' => 'title' ];
+                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
+                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
+                                        $order['r'] = 'false';
+                                    } else {
+                                        $order['r'] = 'true';
+                                    }
+                                }
+                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
+                                ?>
+                                >Title</a>
+                            </th>
+                            <th>
+                                <a
+                                <?php
+                                $order = [ 'o' => 'user' ];
+                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
+                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
+                                        $order['r'] = 'false';
+                                    } else {
+                                        $order['r'] = 'true';
+                                    }
+                                }
+                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
+                                ?>
+                                >Author</a>
+                            </th>
+                            <th>
+                                <a
+                                <?php
+                                $order = [ 'o' => 'created_at' ];
+                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
+                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
+                                        $order['r'] = 'false';
+                                    } else {
+                                        $order['r'] = 'true';
+                                    }
+                                }
+                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
+                                ?>
+                                >Posted Date</a>
+                            </th>
+                            <th>
+                                <a
+                                <?php
+                                $order = [ 'o' => 'views' ];
+                                if (isset($_GET['o']) && $_GET['o'] == $order['o']) {
+                                    if (isset($_GET['r']) && $_GET['r'] == 'true') {
+                                        $order['r'] = 'false';
+                                    } else {
+                                        $order['r'] = 'true';
+                                    }
+                                }
+                                echo 'href=\'' . newsapp\core\Request::addQueryString($order) . '\'';
+                                ?>
+                                >Views Count</a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($news as $new) : ?>
+                        <tr class='clickable-row' data-href='/postDetails?id=<?= $new['id'] ?? '' ?>'>
+                            <td><?= $new['title'] ?? '' ?></td>
+                            <td><?= $new['user']['name'] ?? '' ?> <?= $new['user']['lastName'] ?? '' ?></td>
+                            <td><?= $new['created_at'] ?? '' ?></td>
+                            <td><?= $new['views'] ?? '' ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
                 <div class='row'>
                     <div class='col-md-10 col-md-offset-1 text-center'>
                         <?php
